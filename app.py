@@ -11,15 +11,6 @@ import pickle
 import os
 import random # Import random for the confidence simulation
 
-# --- Configure NLTK Data Path (CRUCIAL FOR DEPLOYMENT) ---
-# This tells NLTK where to look for data.
-# We'll use a temporary directory if not running in a persistent environment.
-# For Streamlit Cloud, /tmp is usually writable.
-NLTK_DATA_DIR = os.path.join(os.getcwd(), 'nltk_data') # Use a relative path within your app directory
-if not os.path.exists(NLTK_DATA_DIR):
-    os.makedirs(NLTK_DATA_DIR, exist_ok=True)
-nltk.data.path.append(NLTK_DATA_DIR)
-
 # --- NLTK Downloads (ENSURE THESE RUN FIRST AND SUCCESSFULLY) ---
 import nltk
 try:
@@ -34,10 +25,6 @@ except LookupError:
     st.info("Downloading NLTK punkt tokenizer...")
     nltk.download('punkt', download_dir=NLTK_DATA_DIR)
 
-# The error explicitly mentions 'punkt_tab/english/'. While 'punkt' usually covers it,
-# sometimes specific modules look for this exact path. Let's also download
-# 'averaged_perceptron_tagger' which is often a dependency for tokenizers,
-# and also 'wordnet' for completeness if you use it (your original notebook did).
 try:
     nltk.data.find('taggers/averaged_perceptron_tagger')
 except LookupError:
