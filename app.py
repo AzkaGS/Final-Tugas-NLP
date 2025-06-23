@@ -10,9 +10,14 @@ import warnings
 import pickle
 import os
 import random # Import random for the confidence simulation
-
-# --- NLTK Downloads (ENSURE THESE RUN FIRST AND SUCCESSFULLY) ---
 import nltk
+
+NLTK_DATA_DIR = os.path.join(os.getcwd(), 'nltk_data') # Use a relative path within your app directory
+if not os.path.exists(NLTK_DATA_DIR):
+    os.makedirs(NLTK_DATA_DIR, exist_ok=True)
+nltk.data.path.append(NLTK_DATA_DIR)
+# --- NLTK Downloads (ENSURE THESE RUN FIRST AND SUCCESSFULLY) ---
+
 try:
     nltk.data.find('corpora/stopwords')
 except LookupError:
