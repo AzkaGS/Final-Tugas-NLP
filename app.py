@@ -9,6 +9,16 @@ from wordcloud import WordCloud
 import warnings
 import pickle
 import os
+import random # Import random for the confidence simulation
+
+# --- Configure NLTK Data Path (CRUCIAL FOR DEPLOYMENT) ---
+# This tells NLTK where to look for data.
+# We'll use a temporary directory if not running in a persistent environment.
+# For Streamlit Cloud, /tmp is usually writable.
+NLTK_DATA_DIR = os.path.join(os.getcwd(), 'nltk_data') # Use a relative path within your app directory
+if not os.path.exists(NLTK_DATA_DIR):
+    os.makedirs(NLTK_DATA_DIR, exist_ok=True)
+nltk.data.path.append(NLTK_DATA_DIR)
 
 # --- NLTK Downloads (ENSURE THESE RUN FIRST AND SUCCESSFULLY) ---
 import nltk
@@ -16,29 +26,29 @@ try:
     nltk.data.find('corpora/stopwords')
 except LookupError:
     st.info("Downloading NLTK stopwords...")
-    nltk.download('stopwords')
+    nltk.download('stopwords', download_dir=NLTK_DATA_DIR)
 
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
     st.info("Downloading NLTK punkt tokenizer...")
-    nltk.download('punkt')
+    nltk.download('punkt', download_dir=NLTK_DATA_DIR)
 
 # The error explicitly mentions 'punkt_tab/english/'. While 'punkt' usually covers it,
-# sometimes specific modules look for this exact path. Let's try downloading
+# sometimes specific modules look for this exact path. Let's also download
 # 'averaged_perceptron_tagger' which is often a dependency for tokenizers,
 # and also 'wordnet' for completeness if you use it (your original notebook did).
 try:
     nltk.data.find('taggers/averaged_perceptron_tagger')
 except LookupError:
     st.info("Downloading NLTK averaged_perceptron_tagger...")
-    nltk.download('averaged_perceptron_tagger')
+    nltk.download('averaged_perceptron_tagger', download_dir=NLTK_DATA_DIR)
 
 try:
     nltk.data.find('corpora/wordnet')
 except LookupError:
     st.info("Downloading NLTK wordnet...")
-    nltk.download('wordnet')
+    nltk.download('wordnet', download_dir=NLTK_DATA_DIR)
 
 
 from nltk.corpus import stopwords
@@ -357,6 +367,7 @@ if st.button("Analisis Sekarang", key="analyze_button"):
         
         # Get probability (confidence) from predict_proba as loss='log_loss' is used
         if hasattr(model, 'predict_proba'):
+            # Get probability for the predicted class
             prediction_proba = model.predict_proba(input_text_tfidf)[0][prediction_label] * 100
         else:
             # Fallback (shouldn't be needed with log_loss, but good practice)
@@ -432,6 +443,7 @@ with tab3:
     st.markdown('<div class="visualization">', unsafe_allow_html=True)
     st.markdown("<h3>Distribusi Panjang Teks</h3>", unsafe_allow_html=True)
     
+    full_df['outcome_label'] = full_df['outcome'].map({0: 'Hoax', 1: 'Asli'}) # Create this for plotting
     fig_hist = px.histogram(full_df, x='text_length', 
                             title='Distribusi Panjang Teks (Jumlah Karakter)',
                             labels={'text_length': 'Panjang Teks (Karakter)', 'count': 'Frekuensi'},
@@ -440,10 +452,10 @@ with tab3:
     st.write("Histogram menunjukkan distribusi panjang teks (jumlah karakter) dari berita dalam dataset.")
     
     st.markdown("<h3>Panjang Teks berdasarkan Label</h3>", unsafe_allow_html=True)
-    fig_box = px.box(full_df, x=full_df['outcome'].map({0: 'Hoax', 1: 'Asli'}), y='text_length',
+    fig_box = px.box(full_df, x='outcome_label', y='text_length',
                      labels={'x': 'Jenis Berita', 'y': 'Panjang Teks (Karakter)'},
                      title='Panjang Teks berdasarkan Label',
-                     color=full_df['outcome'].map({0: 'Hoax', 1: 'Asli'}),
+                     color='outcome_label',
                      color_discrete_map={'Hoax': 'lightcoral', 'Asli': 'skyblue'})
     st.plotly_chart(fig_box, use_container_width=True)
     st.write("Box plot menunjukkan perbedaan panjang teks antara berita hoaks dan asli.")
